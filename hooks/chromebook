@@ -1,0 +1,37 @@
+#!/bin/sh
+
+. $HOME/.env/fun
+
+sym_f $HOME/.env/.xinitrc_chromebook $HOME/.xinitrc
+sym_f $HOME/.env/.xbindkeysrc_chromebook $HOME/.xbindkeysrc
+if [ -e '/usr/share/alsa/ucm2' ]; then
+    echo "+ Installing ucm2 for alsa"
+    sudo cp -R $HOME/.env/ucm2/* /usr/share/alsa/ucm2
+elif [ -e '/usr/share/alsa/ucm' ]; then
+    echo "+ Installing ucm for alsa"
+    sudo cp -R $HOME/.env/ucm/* /usr/share/alsa/ucm
+else
+    printf "\n\n\n\tThere's no alsa installed. You might want to run this script again once you install it.\n\n\n"
+fi
+
+ask "Do you want to install suspend/resume into systemd" "y"
+
+if [ \( "$?" = "0" \) -a \( -e '/etc/systemd/system' \) ]; then
+    sudo cp $HOME/.env/resume@.service /etc/systemd/system/
+    sudo cp $HOME/.env/suspend@.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable "resume@`whoami`"
+    sudo systemctl enable "suspend@`whoami`"
+    if [ -z "`grep HandlePowerKey /etc/systemd/logind.conf`" ]; then
+        sudo sed -i 's/.*HandlePowerKey.*/HandlePowerKey=ignore/' /etc/systemd/logind.conf
+    else
+        echo 'HandlePowerKey=ignore' | sudo tee -a /etc/systemd/logind.conf
+    fi
+fi
+echo "Please install imagemagick and i3lock."
+
+sym_f $HOME/.env/.lock.sh $HOME/.lock.sh
+sym_f $HOME/.env/.lock.icon.png $HOME/.lock.icon.png
+sym_f $HOME/.env/.wall.png $HOME/.wall.png
+
+exit 0

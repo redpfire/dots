@@ -1,0 +1,57 @@
+#!/bin/sh
+
+. $HOME/.env/fun
+
+mkdir -p $HOME/.env/.var
+
+echo "Hello, thanks for using my dotfiles."
+echo "I have to ask you a couple of questions to set you up:\n"
+
+ask "Do you run a chromebook" "n"
+[ "$?" = "0" ] && $HOME/.env/install chromebook
+
+ask "Do you want to run xorg" "y"
+if [ "$?" = "0" ]; then
+    echo "What wm would you want to use? [qtile] \c"
+    read c
+    if [ "$c" != "qtile" ] && [ -n "$c" ]; then
+        printf "$c" > $HOME/.env/.var/wm
+    fi
+
+    ask "Do you want plain background as a wallpaper" "n"
+    if [ "$?" = "0" ]; then
+        touch $HOME/.env/.var/plain_wallpaper
+        echo "What color would you like? (in hex) [#131313] \c"
+        read c
+        if [ "$c" != "#131313" ] && [ -n "$c" ]; then
+            printf "$c" > $HOME/.env/.var/color
+        fi
+    fi
+
+    ask "Do you want to automatically launch startx" "y"
+    [ "$?" = "1" ] && touch $HOME/.env/.var/nostartx
+else
+    touch $HOME/.env/.var/nostartx
+fi
+
+ask "Do you want to use a custom PS1 prefix" "n"
+if [ "$?" = "0" ]; then
+    echo "How would you like to prefix PS1? [] \c"
+    read p
+    [ -n "$p" ] && printf "$p" > $HOME/.env/.var/prompt
+fi
+
+echo "\nFiles from $HOME/.env/.config were symlinked to $HOME/.config"
+: ${WM:=qtile}
+[ -e "$HOME/.env/.var/wm" ] && WM="`cat $HOME/.env/.var/wm`"
+echo "Default WM set to ${WM}."
+: ${BG="an image"}
+if [ -e "$HOME/.env/.var/plain_wallpaper" ]; then
+    : ${COLOR:="#131313"}
+    [ -e "$HOME/.env/.var/color" ] && COLOR="`cat $HOME/.env/.var/color`"
+    BG="${COLOR}"
+fi
+echo "Background is ${BG}."
+: ${CP:="not set"}
+[ -e "$HOME/.env/.var/prompt" ] && CP="`cat $HOME/.env/.var/prompt`"
+echo "Custom prompt is ${CP}"

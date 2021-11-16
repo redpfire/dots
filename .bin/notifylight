@@ -1,0 +1,14 @@
+#!/bin/sh
+
+k=`light -G | sed -e 's/\.00//g'`
+kk=`printf "%3s" "$k"`
+v=$((k/10/2))
+s=""
+
+for ((i = 0; i < v; i++)); do s="$s█"; done
+s="$s<span color='#000000'>"
+for ((j = i; j < 5; j++)); do s="$s█"; done
+s="$s</span>"
+
+notify-send -t 1000 -h string:x-canonical-private-synchronous:anything "Brightness $@" "$s $kk%"
+echo "$v"

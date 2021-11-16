@@ -1,0 +1,5 @@
+#!/bin/sh
+
+pactl get-sink-mute 0 | grep -q yes \
+    && notify-send -t 1000 -h string:x-canonical-private-synchronous:anything "Mute on" \
+    || notify-send -t 1000 -h string:x-canonical-private-synchronous:anything "Mute off"

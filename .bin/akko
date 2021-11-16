@@ -1,0 +1,43 @@
+#!/bin/sh
+
+die() {
+    notify-send "$@"
+    exit 1
+}
+
+bluetoothctl power on
+
+# ex. AKKO-1 ; when empty - AKKO
+[ -n "$1" ] && num="-$1"
+
+# remove all previous pairs
+pairs="`bluetoothctl paired-devices | awk '/AKKO/ {print $2}'`"
+[ -n "$pairs" ] && echo $pairs | xargs -L 1 bluetoothctl remove
+
+echo "Waiting for AKKO${num} keyboard to become available..."
+
+stdbuf -oL bluetoothctl scan on |
+    while IFS= read -r line ; do
+        # proceed only when devices add
+        [ -n "`echo $line | grep NEW`" ] || continue
+
+        if [ -n "`echo $line | grep \"AKKO 3084BT${num}\"`" ]; then
+            bssid="`echo $line | awk '{print $3}'`"
+
+            out="`bt-device -c $bssid 2>&1`"
+            if [ -n "`echo $out | grep 'Page Timeout'`" ]; then
+                bt-device -c $bssid || die "Could not connect to $bssid"
+            else
+                echo $out
+            fi
+
+            sleep 2
+
+            xset r rate 200 30
+            setxkbmap pl -option caps:super
+
+            break
+        fi
+    done
+
+notify-send "Connected to AKKO${num} keyboard"

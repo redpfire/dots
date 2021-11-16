@@ -1,0 +1,47 @@
+#!/bin/sh
+
+. $HOME/.zprofile
+
+xsetroot -cursor_name ptr_left
+
+# key repeat rate
+xset r rate 200 30
+
+# set tapping on touchpad
+xinput set-prop 16 315 1
+
+# enable natural scrolling
+# xinput set-prop 16 297 1
+
+# reload Xresources
+xrdb ~/.Xresources
+
+setxkbmap pl chromebook
+
+xbindkeys # bind chromebook keys
+setxkbmap pl -option caps:super
+
+# screen lock after lid close
+#xss-lock -- $HOME/.lock.sh &
+
+# wallpaper (i'm shooked i want to use it)
+if [ ! -e "$HOME/.env/.var/plain_wallpaper" ]; then
+    if [ -e "$HOME/.wall.png" ]; then
+        feh --bg-fill $HOME/.wall.png
+    elif [ -e "$HOME/.wall.jpg" ]; then
+        feh --bg-fill $HOME/.wall.jpg
+    fi
+else
+    [ -e "$HOME/.env/.var/color" ] && BGCOLOR="`cat $HOME/.env/.var/color`"
+    : ${BGCOLOR:="#131313"}
+    xsetroot -bg "$BGCOLOR"
+fi
+
+~/.bin/poweroff.py &
+
+[ \( -z "$WM" \) -a \( -e $HOME/.env/.var/wm \) ] && WM=`cat $HOME/.env/.var/wm`
+: ${WM:=qtile}
+
+[ $WM = "berry" ] && sxhkd -c $HOME/.config/berry/sxhkdrc &
+
+exec $WM
